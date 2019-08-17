@@ -29,8 +29,8 @@ if [ "${UID}" -eq 0 ]; then
             chown -R "${RUN_USER}:${RUN_GROUP}" "${CROWD_HOME}"
     fi
     # Now drop privileges
-    exec su -s /bin/bash "${RUN_USER}" -c "$CROWD_INSTALL_DIR/apache-tomcat/bin/startup.sh $@"
+    exec su -s /bin/bash "${RUN_USER}" -c "$CROWD_INSTALL_DIR/start_crowd.sh $@"
 else
-    exec "$CROWD_INSTALL_DIR/apache-tomcat/bin/startup.sh" "$@"
+    exec "$CROWD_INSTALL_DIR/start_crowd.sh" "$@"
 fi
 

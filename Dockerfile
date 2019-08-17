@@ -1,11 +1,11 @@
 FROM adoptopenjdk/openjdk8:slim
 
-ENV RUN_USER            					daemon
-ENV RUN_GROUP           					daemon
+ENV RUN_USER                                daemon
+ENV RUN_GROUP                               daemon
 
 
-ENV CROWD_HOME							/var/atlassian/application-data/crowd
-ENV CROWD_INSTALL_DIR						/opt/atlassian/crowd
+ENV CROWD_HOME                            /var/atlassian/application-data/crowd
+ENV CROWD_INSTALL_DIR                        /opt/atlassian/crowd
 
 VOLUME ["${CROWD_HOME}"]
 WORKDIR $CROWD_HOME
@@ -17,29 +17,23 @@ CMD ["/entrypoint.sh", "-fg"]
 ENTRYPOINT ["/tini", "--"]
 
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends fontconfig \
-	&& apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends fontconfig \
+    && apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 ARG TINI_VERSION=v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
-COPY entrypoint.sh              			/entrypoint.sh
+COPY scripts/context.sh                     /context.sh
+COPY entrypoint.sh                          /entrypoint.sh
 
-ARG CROWD_VERSION
+ENV CROWD_VERSION                           3.4.5
 ARG DOWNLOAD_URL=https://product-downloads.atlassian.com/software/crowd/downloads/atlassian-crowd-${CROWD_VERSION}.tar.gz
 
-RUN if [ -z "$CATALINA_CONTEXT_PATH" ]; then \
-    mkdir -p                             	${CROWD_INSTALL_DIR} \
-    && curl -L --silent                  	${DOWNLOAD_URL} | tar -xz --strip-components=1 -C "${CROWD_INSTALL_DIR}" \
-    && chown -R ${RUN_USER}:${RUN_GROUP} 	${CROWD_INSTALL_DIR}/ \
+RUN mkdir -p                                 ${CROWD_INSTALL_DIR} \
+    && curl -L --silent                      ${DOWNLOAD_URL} | tar -xz --strip-components=1 -C "${CROWD_INSTALL_DIR}" \
+    && chown -R ${RUN_USER}:${RUN_GROUP}     ${CROWD_INSTALL_DIR}/ \
     && sed -i -e 's/-Xms\([0-9]\+[kmg]\) -Xmx\([0-9]\+[kmg]\)/-Xms\${JVM_MINIMUM_MEMORY:=\1} -Xmx\${JVM_MAXIMUM_MEMORY:=\2} \${JVM_SUPPORT_RECOMMENDED_ARGS} -Dcrowd.home=\${CROWD_HOME}/g' ${CROWD_INSTALL_DIR}/apache-tomcat/bin/setenv.sh \
-    && sed -i -e 's/port="8095"/port="8095" secure="${catalinaConnectorSecure}" scheme="${catalinaConnectorScheme}" proxyName="${catalinaConnectorProxyName}" proxyPort="${catalinaConnectorProxyPort}"/' ${CROWD_INSTALL_DIR}/apache-tomcat/conf/server.xml \
-    && mv ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/crowd.xml ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/ROOT.xml \
-  else \
-    mkdir -p                                    ${CROWD_INSTALL_DIR} \
-    && curl -L --silent                         ${DOWNLOAD_URL} | tar -xz --strip-components=1 -C "${CROWD_INSTALL_DIR}" \
-    && chown -R ${RUN_USER}:${RUN_GROUP}        ${CROWD_INSTALL_DIR}/ \
-    && sed -i -e 's/-Xms\([0-9]\+[kmg]\) -Xmx\([0-9]\+[kmg]\)/-Xms\${JVM_MINIMUM_MEMORY:=\1} -Xmx\${JVM_MAXIMUM_MEMORY:=\2} \${JVM_SUPPORT_RECOMMENDED_ARGS} -Dcrowd.home=\${CROWD_HOME}/g' ${CROWD_INSTALL_DIR}/apache-tomcat/bin/setenv.sh \
-    && sed -i -e 's/port="8095"/port="8095" secure="${catalinaConnectorSecure}" scheme="${catalinaConnectorScheme}" proxyName="${catalinaConnectorProxyName}" proxyPort="${catalinaConnectorProxyPort}"/' ${CROWD_INSTALL_DIR}/apache-tomcat/conf/server.xml \
-  fi
+    && sed -i -e 's/port="8095"/port="8095" secure="${catalinaConnectorSecure}" scheme="${catalinaConnectorScheme}" proxyName="${catalinaConnectorProxyName}" proxyPort="${catalinaConnectorProxyPort}"/' ${CROWD_INSTALL_DIR}/apache-tomcat/conf/server.xml
+
+RUN /context.sh
