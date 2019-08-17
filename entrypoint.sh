@@ -18,6 +18,19 @@ CATALINA_OPTS="${CATALINA_OPTS} -DcatalinaContextPath=${CATALINA_CONTEXT_PATH}"
 
 export CATALINA_OPTS
 
+# Set the Tomcat context
+if [ -z "$CATALINA_CONTEXT_PATH" ];
+then
+  mv ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/crowd.xml ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/ROOT.xml
+else
+  if [ "$CATALINA_CONTEXT_PATH" == "crowd" ];
+  then
+    echo "Context is default. Skipping..."
+  else
+    mv ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/crowd.xml ${CROWD_INSTALL_DIR}/apache-tomcat/conf/Catalina/localhost/${CATALINA_CONTEXT_PATH}.xml
+  fi
+fi
+
 
 # Start Crowd as the correct user
 if [ "${UID}" -eq 0 ]; then

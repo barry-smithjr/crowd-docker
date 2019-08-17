@@ -24,7 +24,6 @@ ARG TINI_VERSION=v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
-COPY scripts/context.sh                     /context.sh
 COPY entrypoint.sh                          /entrypoint.sh
 
 ENV CROWD_VERSION                           3.4.5
@@ -35,5 +34,3 @@ RUN mkdir -p                                 ${CROWD_INSTALL_DIR} \
     && chown -R ${RUN_USER}:${RUN_GROUP}     ${CROWD_INSTALL_DIR}/ \
     && sed -i -e 's/-Xms\([0-9]\+[kmg]\) -Xmx\([0-9]\+[kmg]\)/-Xms\${JVM_MINIMUM_MEMORY:=\1} -Xmx\${JVM_MAXIMUM_MEMORY:=\2} \${JVM_SUPPORT_RECOMMENDED_ARGS} -Dcrowd.home=\${CROWD_HOME}/g' ${CROWD_INSTALL_DIR}/apache-tomcat/bin/setenv.sh \
     && sed -i -e 's/port="8095"/port="8095" secure="${catalinaConnectorSecure}" scheme="${catalinaConnectorScheme}" proxyName="${catalinaConnectorProxyName}" proxyPort="${catalinaConnectorProxyPort}"/' ${CROWD_INSTALL_DIR}/apache-tomcat/conf/server.xml
-
-RUN /context.sh
