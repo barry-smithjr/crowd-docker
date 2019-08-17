@@ -19,7 +19,7 @@ services:
         networks:
             - web
     crowd:
-	build: .
+        build: .
         volumes:
             - './data/crowd:/var/atlassian/application-data/crowd'
         container_name: 'crowd'
@@ -33,7 +33,7 @@ services:
             - CATALINA_CONNECTOR_SCHEME=https
             - CATALINA_CONNECTOR_PROXYPORT=443
             - CATALINA_CONNECTOR_PROXYNAME=${CROWD_DOMAIN}
-	    - CATALINA_CONTEXT_PATH=${CROWD_CONTEXT}
+            - CATALINA_CONTEXT_PATH=${CROWD_CONTEXT}
             - JVM_MINIMUM_MEMORY=${CROWD_MIN_MEM}
             - JVM_MAXIMUM_MEMORY=${CROWD_MAX_MEM}
         env_file: .env
