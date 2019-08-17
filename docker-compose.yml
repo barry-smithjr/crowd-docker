@@ -1,0 +1,57 @@
+version: '3'
+networks:
+    atlassian-crowd:
+        external: false
+    web:
+        external: true
+services:
+    traefik:
+        image: traefik
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+            - "7080:7080"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./traefik/traefik.toml:/traefik.toml
+            - ./traefik/acme.json:/acme.json
+        networks:
+            - web
+    crowd:
+	build: .
+        volumes:
+            - './data/crowd:/var/atlassian/application-data/crowd'
+        container_name: 'crowd'
+        ports:
+            - '8095:8095'
+        networks:
+            - web
+            - atlassian-crowd
+        environment:
+            - CATALINA_CONNECTOR_SECURE=true
+            - CATALINA_CONNECTOR_SCHEME=https
+            - CATALINA_CONNECTOR_PROXYPORT=443
+            - CATALINA_CONNECTOR_PROXYNAME=${CROWD_DOMAIN}
+	    - CATALINA_CONTEXT_PATH=${CROWD_CONTEXT}
+            - JVM_MINIMUM_MEMORY=${CROWD_MIN_MEM}
+            - JVM_MAXIMUM_MEMORY=${CROWD_MAX_MEM}
+        env_file: .env
+        labels:
+            - traefik.enable=true
+            - traefik.backend=crowd
+            - traefik.frontend.rule=Host:${CROWD_DOMAIN}
+            - traefik.docker.network=web
+            - traefik.port=8095
+    atlassiandb:
+        volumes:
+            - './scripts/atlassian.sql:/docker-entrypoint-initdb.d/atlassian.sql'
+            - './pg-data:/var/lib/postgresql/data'
+        container_name: 'atlassian-db'
+        ports:
+            - '5496:5432'
+        networks:
+            - atlassian-crowd
+        environment:
+            - POSTGRES_PASSWORD=${PG_PASSWORD}
+        image: 'postgres:9.6-alpine'
