@@ -26,7 +26,7 @@ RUN chmod +x /tini
 
 COPY entrypoint.sh                          /entrypoint.sh
 
-ENV CROWD_VERSION                           3.4.5
+ENV CROWD_VERSION                           3.5.0
 ARG DOWNLOAD_URL=https://product-downloads.atlassian.com/software/crowd/downloads/atlassian-crowd-${CROWD_VERSION}.tar.gz
 
 RUN mkdir -p                                 ${CROWD_INSTALL_DIR} \
