@@ -2,14 +2,31 @@ version: '3'
 networks:
     atlassian-crowd:
         external: false
+    web:
+        external: true
 services:
+    traefik:
+        image: traefik
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+            - "7080:7080"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./traefik/traefik.toml:/traefik.toml
+            - ./traefik/acme.json:/acme.json
+        networks:
+            - web
     crowd:
+        build: .
         volumes:
             - './data/crowd:/var/atlassian/application-data/crowd'
         container_name: 'crowd'
         ports:
             - '8095:8095'
         networks:
+            - web
             - atlassian-crowd
         environment:
             - CATALINA_CONNECTOR_SECURE=true
@@ -26,7 +43,6 @@ services:
             - traefik.frontend.rule=Host:${CROWD_DOMAIN}
             - traefik.docker.network=web
             - traefik.port=8095
-        image: barryb1991/crowd-docker:latest
     atlassiandb:
         volumes:
             - './scripts/atlassian.sql:/docker-entrypoint-initdb.d/atlassian.sql'
